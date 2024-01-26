@@ -1,9 +1,11 @@
 
 import { BrowserWindow, ipcMain, app } from "electron";
 export class CommonWindowEvent {
+  // 获得窗口
   private static getWin(event: any) {
     return BrowserWindow.fromWebContents(event.sender);
   }
+  // 监听窗口
   public static listen() {
     ipcMain.handle("minimizeWindow", (e) => {
       this.getWin(e)?.minimize();
@@ -34,11 +36,14 @@ export class CommonWindowEvent {
     });
   }
   public static regWinEvent(win: BrowserWindow) {
-    win.on("maximize", () => {
-      win.webContents.send("windowMaximize");
+    win.on("maximize", () => {      
+      console.log('maxSize');
+      
+      win.webContents.send("windowMaximized");
     });
     win.on("unmaximize", () => {
-      win.webContents.send("windowUnmaximize");
+      console.log('unmaxSize');
+      win.webContents.send("windowUnmaximized");
     });
     //注册打开子窗口的回调函数
     win.webContents.setWindowOpenHandler((param) => {

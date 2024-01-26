@@ -27,7 +27,7 @@ export const devPlugin = () => {
             stdio: "inherit",
           }
         );
-        // electron进程关闭时，关闭vite的httpServer  
+        // electron进程关闭时，关闭vite的httpServer
         electronProcess.on("close", () => {
           server.close();
           process.exit();
@@ -35,4 +35,47 @@ export const devPlugin = () => {
       });
     },
   };
+};
+/**
+ * @description 处理 vite-plugin-optimizer 转换模块列表
+ * 后续新增模块通过修改该函数实现
+ * 会参与运行时和编译时
+ * @returns result
+ */
+export const getReplacer = () => {
+  const externalModels = [
+    "os",
+    "fs",
+    "http",
+    "path",
+    "events",
+    "child_process",
+    "crypto",
+    "http",
+    "buffer",
+    "url",
+    "better-sqlite3",
+    "knex",
+  ];
+  let result = {};
+  for (const item of externalModels) {
+    result[item] = () => ({
+      find: new RegExp(`^${item}$`),
+      code: `const ${item} = require('${item}');export { ${item} as default }`,
+    });
+  }
+  result["electron"] = () => {
+    let electronModules = [
+      "clipboard",
+      "ipcRenderer",
+      "nativeImage",
+      "shell",
+      "webFrame",
+    ].join(",");
+    return {
+      find: new RegExp(`^electron$`),
+      code: `const {${electronModules}} = require('electron');export {${electronModules}}`,
+    };
+  };
+  return result;
 };
